@@ -4,9 +4,8 @@
 <script src="http://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
 <script src="disastr_plugin.js"></script>
 
-<!--  <script src="../build/3Dmol.js"></script> /-->
-
 <!-- CSS /-->
+
 <style>
   .article {
      width: 100%;
@@ -25,6 +24,11 @@
     height: 80vh;
     float: right;
  }
+ .button {
+ 	width: 80px;
+    height: 40px;
+ }
+
 </style>
 
 <body>
@@ -34,20 +38,27 @@
 	</div>
 
 	<hr style="margin: 2;">
-	<input type="button" value="Stick"
-		onclick="glviewer.setStyle({},{stick:{}}); glviewer.render();"></input>
-	<input type="button" value="Line"
-		onclick="glviewer.setStyle({},{line:{}}); glviewer.render();"></input>
-	<input type="button" value="Sphere"
-		onclick="glviewer.setStyle({},{sphere:{}}); glviewer.render();"></input>
-	<input type="button" value="Cartoon"
-		onclick="glviewer.setStyle({hetflag:false},{cartoon:{}}); glviewer.render();"></input>
-	<!-- <input type="button" value="Label alpha C's"
-		onclick="addLabels(glviewer); glviewer.render();"></input> /-->
-	<input type="button" value="Color SS"
+	<br>
+
+	<!-- Buttons /-->
+
+	<input type="button" value="Stick" class='button'
+		onclick="set_custom_stick(glviewer);"></input>
+
+	<input type="button" value="Line" class='button'
+		onclick="set_custom_line(glviewer);"></input>
+
+	<input type="button" value="Sphere" class='button'
+		onclick="set_custom_sphere(glviewer);"></input>
+
+	<input type="button" value="Cartoon" class='button'
+		onclick="set_custom_cartoon(glviewer);"></input>
+	
+	<input type="button" value="Color SS" class='button'
 		onclick="colorSS(glviewer);"></input>
 
-	<input type="button" value="Recenter" onclick="glviewer.zoomTo();"></input>
+	<input type="button" value="Recenter" class='button' 
+		onclick="glviewer.zoomTo();"></input>
 	<br>
 
 </body>
