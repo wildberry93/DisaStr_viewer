@@ -3,9 +3,11 @@
 var glviewer = null;
 var labels = [];
 var pdb_id = "1a5j";
-var list = ["Arg20Ser", "His30Thr", "Met111His", "Ala2002Lys"];
+var list = ["Arg20Ser", "His30Thr", "Met111His", "Ala70Lys"];
 var list2 = [1,2,3,4,5,6]
 var IsCalledOnce = true;
+var muts = [2,5,10];
+var variants = [3,20];
 
 
 var addLabels = function() {
@@ -54,7 +56,7 @@ var colorSS = function(viewer) {
 	
 /* Because we color residues by mutation type we need to 
    keep the coloring when switching between representations */
-   
+
 var set_custom_stick = function(viewer) {
 	viewer.setStyle({},{stick:{}}); 
 	viewer.setStyle({resi: muts}, {stick: {color: 'green'}}); // muts resis
@@ -95,8 +97,12 @@ var set_custom_sphere = function(viewer) {
 }
 
 var atomcallback = function(atom, viewer) {
+	console.log(atom.resn);
 	if (atom.clickLabel === undefined || !atom.clickLabel instanceof $3Dmol.Label) {
-		atom.clickLabel = viewer.addLabel(atom.elem + atom.serial, {
+
+		viewer.addResLabels({resi: atom.resi, atom: 'CA'});
+		atom.clicked = true; 
+		/*atom.clickLabel = viewer.addLabel(atom.resn + " " + atom.resi,{
 		fontSize : 14,
 		position : {
 			x : atom.x,
@@ -105,12 +111,11 @@ var atomcallback = function(atom, viewer) {
 		},
 		backgroundColor: "black"
 	});
-	atom.clicked = true;
+	atom.clicked = true; */
 	}
 
 	//toggle label style
-	else {
-
+	/*else {
 		if (atom.clicked) {
 			var newstyle = atom.clickLabel.getStyle();
 			newstyle.backgroundColor = 0x66ccff;
@@ -124,7 +129,7 @@ var atomcallback = function(atom, viewer) {
 			atom.clicked = false;
 		}
 
-	}
+	} */
 };
 var readText = function(input,func) {
 	if(input.files.length > 0) {
@@ -138,8 +143,6 @@ var readText = function(input,func) {
 	}
 };
 
-var muts = [2,5,10]
-var variants = [3,20]
 
 function make_muts_list(element, mut, glelement) {
 	var myRe = new RegExp("([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|\\?)", "g");
@@ -171,8 +174,20 @@ $(document).ready(function() {
     	glviewer.setStyle({resi: muts}, {cartoon: {color: 'green'}}); // muts resis
     	glviewer.setStyle({resi: variants}, {cartoon: {color: 'red'}}); // variants resis
     	glviewer.render();
+    	var m = glviewer.getModel();
+    	var atoms = m.selectedAtoms({});
+
+    	console.log(atoms);
+
+    	for (var i in atoms) {
+			var atom = atoms[i];
+			atom.clickable = true;
+			atom.callback = atomcallback;
+		}
+
     });
 
 	glviewer.setBackgroundColor(0xffffff);
+
 
 });
