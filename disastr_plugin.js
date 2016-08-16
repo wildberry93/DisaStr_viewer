@@ -10,27 +10,6 @@ var muts = [2,5,10];
 var variants = [3,20];
 
 
-var addLabels = function() {
-	var atoms = glviewer.getModel().selectedAtoms({
-		atom : "CA"
-	});
-	for ( var a in atoms) {
-		var atom = atoms[a];
-
-		var l = glviewer.addLabel(atom.resn + " " + atom.resi, {
-			inFront : true,
-			fontSize : 12,
-			position : {
-				x : atom.x,
-				y : atom.y,
-				z : atom.z
-			}
-		});
-		atom.label = l;
-		labels.push(atom);
-	}
-};
-
 var colorSS = function(viewer) {
 	//color by secondary structure
 	var m = viewer.getModel();
@@ -97,40 +76,21 @@ var set_custom_sphere = function(viewer) {
 }
 
 var atomcallback = function(atom, viewer) {
-	console.log(atom.resn);
-	if (atom.clickLabel === undefined || !atom.clickLabel instanceof $3Dmol.Label) {
-
+	if (!atom.clicked) {
+	//if (atom.clicked == false) {		
 		viewer.addResLabels({resi: atom.resi, atom: 'CA'});
-		atom.clicked = true; 
-		/*atom.clickLabel = viewer.addLabel(atom.resn + " " + atom.resi,{
-		fontSize : 14,
-		position : {
-			x : atom.x,
-			y : atom.y,
-			z : atom.z
-		},
-		backgroundColor: "black"
-	});
-	atom.clicked = true; */
+		atom.clicked = true;
+	} else {
+		console.log(atom.resi.label);
+		//var newstyle = atom.clickLabel.getStyle();
+		//newstyle.backgroundColor = 0x66ccff;
+		//viewer.setLabelStyle(atom.clickLabel, newstyle);
+		viewer.removeLabel(atom.Label);
+		//delete atom;
+		atom.clicked = !atom.clicked;
 	}
-
-	//toggle label style
-	/*else {
-		if (atom.clicked) {
-			var newstyle = atom.clickLabel.getStyle();
-			newstyle.backgroundColor = 0x66ccff;
-
-			viewer.setLabelStyle(atom.clickLabel, newstyle);
-			atom.clicked = !atom.clicked;
-		}
-		else {
-			viewer.removeLabel(atom.clickLabel);
-			delete atom.clickLabel;
-			atom.clicked = false;
-		}
-
-	} */
 };
+
 var readText = function(input,func) {
 	if(input.files.length > 0) {
 		var file = input.files[0];
@@ -177,13 +137,12 @@ $(document).ready(function() {
     	var m = glviewer.getModel();
     	var atoms = m.selectedAtoms({});
 
-    	console.log(atoms);
-
     	for (var i in atoms) {
 			var atom = atoms[i];
 			atom.clickable = true;
 			atom.callback = atomcallback;
 		}
+		glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
 
     });
 
