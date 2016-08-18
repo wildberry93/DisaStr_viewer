@@ -1,5 +1,11 @@
 /* Globals */
 
+var aa = {'G': 'Gly','P': 'Pro','A': 'Ala','V': 'Val',
+		'L': 'Leu','I': 'Ile','M': 'Met','C': 'Cys',
+		'F': 'Phe','Y': 'Tyr','W': 'Trp','H': 'His',
+		'K': 'Lys','R': 'Arg','Q': 'Gln','N': 'Asn',
+		'E': 'Glu','D': 'Asp','S': 'Ser','T': 'Thr'};
+
 var glviewer = null;
 var labels = [];
 var pdb_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/3fvq.pdb';
