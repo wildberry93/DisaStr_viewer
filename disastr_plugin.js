@@ -2,13 +2,65 @@
 
 var glviewer = null;
 var labels = [];
-var pdb_id = "1a5j";
+var pdb_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/3fvq.pdb';
+var dfn_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/rasmol.dfn';
+var mappings_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/3fvqA.map';
 var list = ["Arg20Ser", "His30Thr", "Met111His", "Ala70Lys"];
 var list2 = [1,2,3,4,5,6]
 var IsCalledOnce = true;
 var muts = [2,5,10];
 var variants = [3,20];
 
+var read_mappings = function(){
+	map_dict = {};
+	var mappings = readFile(mappings_file).split("\n");
+	for (var i = 0; i < mappings.length; i++) {
+		var splitted = mappings[i].split(/\s+/);
+		muts = splitted[5].split(":").slice(1,splitted[5].split(":").length);
+		map_dict[splitted[0]] = [splitted[1], splitted[4], muts];
+	}
+
+	return map_dict;
+}
+
+var apply_styles = function(viewer, mut_chain_id){
+	var mappings = read_mappings();
+	var chains_prot = [];
+	var chains_nuc = [];
+	var ligands_res = {};
+	var metals_res = [];
+
+	var dfn_f = readFile(dfn_file);
+	var splitted = dfn_f.split("\n");  
+
+	for (var i = 0; i < splitted.length; i++) {
+		if (splitted[i][0] === "P"){
+			if (splitted[i][1] != mut_chain_id)	{
+				chains_prot.push(splitted[i][1]);
+			}
+
+		} else if (splitted[i][0] === "N"){
+			chains_nuc.push(splitted[i][1]);
+		} else if (splitted[i][0] === "l"){
+			resid = splitted[i].split(" ")[2].split("(")[0] // need for regexp :-(
+			chain = splitted[i].split(" ")[2].split("(")[1][0]
+			ligands_res[resid] = chain;
+		} else if (splitted[i][0] === "M"){
+			//ligands_res.push(splitted[i][1]);
+		}
+	}
+
+	glviewer.setStyle({chain:mut_chain_id}, {cartoon:{color:'#A020F0'}}); // sel chain
+	glviewer.setStyle({chain:chains_prot}, {cartoon:{color:'#D3D3D3'}});  // remaining chains
+	glviewer.setStyle({chain:chains_nuc}, {stick:{}}); // nucleic acid
+
+	for (key in ligands_res) {
+		glviewer.setStyle({chain:ligands_res[key], resi:key}, {sphere:{}}); // ligands
+	}
+
+	glviewer.setStyle({resi: muts}, {stick: {color: 'green'}}); // muts resis
+    glviewer.setStyle({resi: variants}, {stick: {color: 'red'}}); // variants resis
+}
 
 var colorSS = function(viewer) {
 	//color by secondary structure
@@ -31,7 +83,7 @@ var colorSS = function(viewer) {
 		IsCalledOnce = true;
 	}
 
-	}
+}
 	
 /* Because we color residues by mutation type we need to 
    keep the coloring when switching between representations */
@@ -77,37 +129,41 @@ var set_custom_sphere = function(viewer) {
 
 var atomcallback = function(atom, viewer) {
 	if (!atom.clicked) {
-	//if (atom.clicked == false) {		
 		viewer.addResLabels({resi: atom.resi, atom: 'CA'});
 		atom.clicked = true;
-	} else {
-		console.log(atom.resi.label);
-		//var newstyle = atom.clickLabel.getStyle();
-		//newstyle.backgroundColor = 0x66ccff;
-		//viewer.setLabelStyle(atom.clickLabel, newstyle);
+	} else {	
 		viewer.removeLabel(atom.Label);
-		//delete atom;
 		atom.clicked = !atom.clicked;
 	}
 };
 
-var readText = function(input,func) {
+var readText = function(input) {
+	console.log(input);
 	if(input.files.length > 0) {
 		var file = input.files[0];
 		var reader = new FileReader();
-	    reader.onload = function(evt) {
-	    	func(evt.target.result,file.name);
-	    };
+	    //reader.onload = function(evt) {
+	    //	func(evt.target.result,file.name);
+	    //};
 	    reader.readAsText(file);
-	    $(input).val('');
+	    //$(input).val('');
+	    console.log(evt.target.result);
 	}
 };
 
+function readFile(file) {
+    var http = new XMLHttpRequest();
+    http.open('get', file, false);
+    http.send();
+    var text = http.responseText;
 
-function make_muts_list(element, mut, glelement) {
-	var myRe = new RegExp("([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|\\?)", "g");
-	var myArray = myRe.exec(mut); // get residue number 
-	console.log(myArray);
+    return text;
+}
+
+function make_muts_list(element, muts_dict) {
+	//var myRe = new RegExp("([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|\\?)", "g");
+	//var myArray = myRe.exec(mut); // get residue number 
+	//console.log(myArray);
 	resi_num = myArray[2];
 	string = '<ul onclick="switchColors(this,'+resi_num+',glviewer);">'+mut+'</ul>';
 	element.append(string);
@@ -123,12 +179,32 @@ function switchColors(element, position, glelement) {
 
 $(document).ready(function() {
 
-	glviewer = $3Dmol.createViewer("gldiv");
+	// this should be changed later
+	
+	file = readFile(pdb_file);
 
+	glviewer = $3Dmol.createViewer("gldiv");
+	
 	for (var i = 0; i < list.length; i++) {
     	make_muts_list( $("#selediv"), list[i], glviewer);
 	}
 
+	m = glviewer.addModel(file, "pqr");
+	apply_styles(glviewer, 'A');
+	//glviewer.setStyle({}, {cartoon:{}}); 
+    
+    glviewer.render();
+    var m = glviewer.getModel();
+    var atoms = m.selectedAtoms({});
+
+    for (var i in atoms) {
+		var atom = atoms[i];
+		atom.clickable = true;
+		atom.callback = atomcallback;
+	}
+	glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
+
+	/*
     $3Dmol.download('pdb:'+pdb_id, glviewer, {}, function() {
     	glviewer.setStyle({}, {cartoon:{}}); 
     	glviewer.setStyle({resi: muts}, {cartoon: {color: 'green'}}); // muts resis
@@ -144,7 +220,7 @@ $(document).ready(function() {
 		}
 		glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
 
-    });
+    }); */
 
 	glviewer.setBackgroundColor(0xffffff);
 
