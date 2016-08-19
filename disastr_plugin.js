@@ -11,11 +11,13 @@ var labels = [];
 var pdb_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/3fvq.pdb';
 var dfn_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/rasmol.dfn';
 var mappings_file = 'file:///C:/Users/jagoda/Desktop/disastr_repo/3fvqA.map';
-var list = ["Arg20Ser", "His30Thr", "Met111His", "Ala70Lys"];
-var list2 = [1,2,3,4,5,6]
 var IsCalledOnce = true;
 var muts = [2,5,10];
 var variants = [3,20];
+var filename = mappings_file.replace(/^.*[\\\/]/, '')
+
+var global_chain = filename.split(".")[0][4];
+console.log(global_chain);
 
 var read_mappings = function(){
 	map_dict = {};
@@ -29,12 +31,13 @@ var read_mappings = function(){
 	return map_dict;
 }
 
-var apply_styles = function(viewer, mut_chain_id){
+var apply_styles = function(viewer, mut_chain_id, muts_dict){
 	var mappings = read_mappings();
 	var chains_prot = [];
 	var chains_nuc = [];
 	var ligands_res = {};
 	var metals_res = [];
+	var muts_pos = [];
 
 	var dfn_f = readFile(dfn_file);
 	var splitted = dfn_f.split("\n");  
@@ -64,8 +67,20 @@ var apply_styles = function(viewer, mut_chain_id){
 		glviewer.setStyle({chain:ligands_res[key], resi:key}, {sphere:{}}); // ligands
 	}
 
-	glviewer.setStyle({resi: muts}, {stick: {color: 'green'}}); // muts resis
-    glviewer.setStyle({resi: variants}, {stick: {color: 'red'}}); // variants resis
+	for (key in muts_dict) {	
+		muts_pos.push(muts_dict[key][1]);
+	}
+
+	glviewer.setStyle({chain: mut_chain_id, resi: muts_pos}, 
+			{stick: {color: 'red'}, cartoon: {color: '#A020F0'}}); // muts resis
+
+	glviewer.setStyle({resn:" CA"}, {sphere: {color: "yellow"}} ); // muts resis
+
+
+	glviewer.addResLabels({chain: mut_chain_id, resi: muts_pos, atom: 'CA'}, 
+			{fontSize: 13, showBackground: false, fontColor: 'black'}); //muts resis labels resn
+
+
 }
 
 var colorSS = function(viewer) {
@@ -166,55 +181,57 @@ function readFile(file) {
     return text;
 }
 
-function make_muts_list(muts_dict) {
+function make_muts_list(muts_dict, chain) {
 
 	var element = $("#selediv");
 	for (key in muts_dict) {
 		resi_num = muts_dict[key][1]
 		for (var i = 0; i < muts_dict[key][2].length; i++) {
 
-			mut = aa[muts_dict[key][0][0]]+key+aa[muts_dict[key][2][i][0]];
+			mut = aa[muts_dict[key][0][0]]+" "+key+" "+aa[muts_dict[key][2][i][0]];
 			var col = "black";
-			if (muts_dict[key][2][i][1] === 'd'){
+			if (muts_dict[key][2][i][1] === 'd') {
 				col = "red";
 			}
-			string = '<ul onclick="switchColors(this,'+resi_num+',glviewer);"><font color='+col+'>'+mut+'</font></ul>';
+
+			string = '<ul onclick="zoom_residue(this,'+resi_num+
+						',glviewer);"><font color='+col+'>'+mut+'</font></ul>';
 			element.append(string);
 		}
 	}
 }
 
-function switchColors(element, position, glelement) {  
-	glviewer.zoomTo({resi: position});
+function zoom_residue(element, position, glelement) {  
+	glviewer.zoomTo({chain:global_chain, resi: position});
 	glelement.render();
 }  
 
 $(document).ready(function() {
 
 	// this should be changed later
-	
 	file = readFile(pdb_file);
 
 	glviewer = $3Dmol.createViewer("gldiv");
 
 	var muts_dict = read_mappings();
+
 	m = glviewer.addModel(file, "pqr");
-	apply_styles(glviewer, 'A');
+	apply_styles(glviewer, global_chain, muts_dict);
     
     glviewer.render();
     var m = glviewer.getModel();
     var atoms = m.selectedAtoms({});
 
-    make_muts_list(muts_dict);
+    make_muts_list(muts_dict, global_chain);
 
     for (var i in atoms) {
 		var atom = atoms[i];
 		atom.clickable = true;
 		atom.callback = atomcallback;
 	}
+
 	glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
 
 	glviewer.setBackgroundColor(0xffffff);
-
 
 });
