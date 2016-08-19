@@ -75,13 +75,11 @@ var apply_styles = function(viewer, mut_chain_id, muts_dict){
 			{stick: {color: 'red'}, cartoon: {color: '#A020F0'}}); // muts resis
 
 	for (var i = 0; i < metals_res.length; i++) {
-		//console.log(metals_res[i]);
 		glviewer.setStyle({resn:" "+metals_res[i]}, {sphere: {color: "blue"}} ); // muts resis
 	}
 
 	//glviewer.addResLabels({chain: mut_chain_id, resi: muts_pos, atom: 'CA'}, 
 	//		{fontSize: 13, showBackground: false, fontColor: 'black'}); //muts resis labels resn
-
 
 }
 
@@ -150,16 +148,6 @@ var set_custom_sphere = function(viewer) {
     viewer.render();
 }
 
-var atomcallback = function(atom, viewer) {
-	if (!atom.clicked) {
-		viewer.addResLabels({resi: atom.resi, atom: 'CA'});
-		atom.clicked = true;
-	} else {	
-		viewer.removeLabel(atom.Label);
-		atom.clicked = !atom.clicked;
-	}
-};
-
 var readText = function(input) {
 	console.log(input);
 	if(input.files.length > 0) {
@@ -212,28 +200,17 @@ $(document).ready(function() {
 
 	// this should be changed later
 	file = readFile(pdb_file);
-
-	glviewer = $3Dmol.createViewer("gldiv");
-
 	var muts_dict = read_mappings();
 
-	m = glviewer.addModel(file, "pqr");
+	glviewer = $3Dmol.createViewer("gldiv");
+	glviewer.addModel(file, "pqr");
+
 	apply_styles(glviewer, global_chain, muts_dict);
     
     glviewer.render();
-    var m = glviewer.getModel();
-    var atoms = m.selectedAtoms({});
-
     make_muts_list(muts_dict, global_chain);
 
-    for (var i in atoms) {
-		var atom = atoms[i];
-		atom.clickable = true;
-		atom.callback = atomcallback;
-	}
-
 	glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
-
 	glviewer.setBackgroundColor(0xffffff);
 
 });
