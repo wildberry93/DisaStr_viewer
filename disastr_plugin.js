@@ -55,7 +55,7 @@ var apply_styles = function(viewer, mut_chain_id, muts_dict){
 			chain = splitted[i].split(" ")[2].split("(")[1][0]
 			ligands_res[resid] = chain;
 		} else if (splitted[i][0] === "M"){
-			//ligands_res.push(splitted[i][1]);
+			metals_res.push(splitted[i].slice(1, splitted.length).split(" ")[0]);
 		}
 	}
 
@@ -74,11 +74,13 @@ var apply_styles = function(viewer, mut_chain_id, muts_dict){
 	glviewer.setStyle({chain: mut_chain_id, resi: muts_pos}, 
 			{stick: {color: 'red'}, cartoon: {color: '#A020F0'}}); // muts resis
 
-	glviewer.setStyle({resn:" CA"}, {sphere: {color: "yellow"}} ); // muts resis
+	for (var i = 0; i < metals_res.length; i++) {
+		//console.log(metals_res[i]);
+		glviewer.setStyle({resn:" "+metals_res[i]}, {sphere: {color: "blue"}} ); // muts resis
+	}
 
-
-	glviewer.addResLabels({chain: mut_chain_id, resi: muts_pos, atom: 'CA'}, 
-			{fontSize: 13, showBackground: false, fontColor: 'black'}); //muts resis labels resn
+	//glviewer.addResLabels({chain: mut_chain_id, resi: muts_pos, atom: 'CA'}, 
+	//		{fontSize: 13, showBackground: false, fontColor: 'black'}); //muts resis labels resn
 
 
 }
