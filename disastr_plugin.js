@@ -166,21 +166,27 @@ function readFile(file) {
     return text;
 }
 
-function make_muts_list(element, muts_dict) {
-	//var myRe = new RegExp("([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|\\?)", "g");
-	//var myArray = myRe.exec(mut); // get residue number 
-	//console.log(myArray);
-	resi_num = myArray[2];
-	string = '<ul onclick="switchColors(this,'+resi_num+',glviewer);">'+mut+'</ul>';
-	element.append(string);
+function make_muts_list(muts_dict) {
+
+	var element = $("#selediv");
+	for (key in muts_dict) {
+		resi_num = muts_dict[key][1]
+		for (var i = 0; i < muts_dict[key][2].length; i++) {
+
+			mut = aa[muts_dict[key][0][0]]+key+aa[muts_dict[key][2][i][0]];
+			var col = "black";
+			if (muts_dict[key][2][i][1] === 'd'){
+				col = "red";
+			}
+			string = '<ul onclick="switchColors(this,'+resi_num+',glviewer);"><font color='+col+'>'+mut+'</font></ul>';
+			element.append(string);
+		}
+	}
 }
 
 function switchColors(element, position, glelement) {  
-
-	//glelement.setStyle({resi: position}, {stick: {color: 'blue'}});
 	glviewer.zoomTo({resi: position});
 	glelement.render();
-
 }  
 
 $(document).ready(function() {
@@ -190,18 +196,16 @@ $(document).ready(function() {
 	file = readFile(pdb_file);
 
 	glviewer = $3Dmol.createViewer("gldiv");
-	
-	for (var i = 0; i < list.length; i++) {
-    	make_muts_list( $("#selediv"), list[i], glviewer);
-	}
 
+	var muts_dict = read_mappings();
 	m = glviewer.addModel(file, "pqr");
 	apply_styles(glviewer, 'A');
-	//glviewer.setStyle({}, {cartoon:{}}); 
     
     glviewer.render();
     var m = glviewer.getModel();
     var atoms = m.selectedAtoms({});
+
+    make_muts_list(muts_dict);
 
     for (var i in atoms) {
 		var atom = atoms[i];
@@ -209,24 +213,6 @@ $(document).ready(function() {
 		atom.callback = atomcallback;
 	}
 	glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
-
-	/*
-    $3Dmol.download('pdb:'+pdb_id, glviewer, {}, function() {
-    	glviewer.setStyle({}, {cartoon:{}}); 
-    	glviewer.setStyle({resi: muts}, {cartoon: {color: 'green'}}); // muts resis
-    	glviewer.setStyle({resi: variants}, {cartoon: {color: 'red'}}); // variants resis
-    	glviewer.render();
-    	var m = glviewer.getModel();
-    	var atoms = m.selectedAtoms({});
-
-    	for (var i in atoms) {
-			var atom = atoms[i];
-			atom.clickable = true;
-			atom.callback = atomcallback;
-		}
-		glviewer.mapAtomProperties($3Dmol.applyPartialCharges);
-
-    }); */
 
 	glviewer.setBackgroundColor(0xffffff);
 
